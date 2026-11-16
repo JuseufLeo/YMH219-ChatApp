@@ -28,6 +28,9 @@ namespace ChatClientApp
             txtMessage = new TextBox();
             btnSend = new Button();
             btnSaveHistory = new Button();
+            lblTarget = new Label();
+            btnEveryone = new Button();
+            lblUsersHint = new Label();
             saveFileDialog = new SaveFileDialog();
             ((System.ComponentModel.ISupportInitialize)numPort).BeginInit();
             SuspendLayout();
@@ -135,6 +138,7 @@ namespace ChatClientApp
             lstUsers.Location = new Point(564, 108);
             lstUsers.Name = "lstUsers";
             lstUsers.Size = new Size(184, 358);
+            lstUsers.DoubleClick += LstUsers_DoubleClick;
             //
             // txtMessage
             //
@@ -162,6 +166,31 @@ namespace ChatClientApp
             btnSaveHistory.Text = "Sohbet Geçmişini Kaydet";
             btnSaveHistory.Click += BtnSaveHistory_Click;
             //
+            // lblTarget
+            //
+            lblTarget.Font = new Font("Segoe UI", 9.75F, FontStyle.Bold);
+            lblTarget.Location = new Point(12, 512);
+            lblTarget.Name = "lblTarget";
+            lblTarget.Size = new Size(440, 26);
+            lblTarget.TextAlign = ContentAlignment.MiddleLeft;
+            //
+            // btnEveryone
+            //
+            btnEveryone.Location = new Point(460, 512);
+            btnEveryone.Name = "btnEveryone";
+            btnEveryone.Size = new Size(92, 26);
+            btnEveryone.Text = "Herkese";
+            btnEveryone.Click += BtnEveryone_Click;
+            //
+            // lblUsersHint
+            //
+            lblUsersHint.ForeColor = Color.DimGray;
+            lblUsersHint.Location = new Point(564, 512);
+            lblUsersHint.Name = "lblUsersHint";
+            lblUsersHint.Size = new Size(184, 26);
+            lblUsersHint.Text = "Özel mesaj: listede kişiye çift tıkla";
+            lblUsersHint.TextAlign = ContentAlignment.MiddleLeft;
+            //
             // saveFileDialog
             //
             saveFileDialog.DefaultExt = "txt";
@@ -173,7 +202,7 @@ namespace ChatClientApp
             AcceptButton = btnSend;
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(760, 518);
+            ClientSize = new Size(760, 548);
             Controls.Add(lblHost);
             Controls.Add(txtHost);
             Controls.Add(lblPort);
@@ -189,6 +218,9 @@ namespace ChatClientApp
             Controls.Add(txtMessage);
             Controls.Add(btnSend);
             Controls.Add(btnSaveHistory);
+            Controls.Add(lblTarget);
+            Controls.Add(btnEveryone);
+            Controls.Add(lblUsersHint);
             FormBorderStyle = FormBorderStyle.FixedSingle;
             MaximizeBox = false;
             Name = "ClientForm";
@@ -215,6 +247,9 @@ namespace ChatClientApp
         private TextBox txtMessage;
         private Button btnSend;
         private Button btnSaveHistory;
+        private Label lblTarget;
+        private Button btnEveryone;
+        private Label lblUsersHint;
         private SaveFileDialog saveFileDialog;
     }
 }

@@ -10,12 +10,19 @@ namespace ChatClientApp
     {
         private readonly ChatClient client = new ChatClient();
 
+        // Kullanıcı listesindeki gerçek adlar ("(sen)" eki olmadan), çift tıklamada kullanılır
+        private readonly List<string> onlineUsers = new List<string>();
+
+        // Özel mesajın alıcısı; null ise mesaj herkese gider
+        private string privateTarget;
+
         public ClientForm()
         {
             InitializeComponent();
             client.MessageReceived += (s, msg) => RunOnUi(() => ShowMessage(msg));
             client.Disconnected += (s, reason) => RunOnUi(() => OnDisconnected(reason));
             UpdateStatus();
+            UpdateTarget();
         }
 
         // ---------- Butonlar ----------
@@ -60,7 +67,10 @@ namespace ChatClientApp
                 return;
             try
             {
-                await client.SendAsync(text);
+                if (privateTarget == null)
+                    await client.SendAsync(text);
+                else
+                    await client.SendPrivateAsync(privateTarget, text);
                 txtMessage.Clear();
             }
             catch (Exception ex) when (ex is IOException || ex is ObjectDisposedException || ex is InvalidOperationException)
@@ -69,6 +79,47 @@ namespace ChatClientApp
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             txtMessage.Focus();
+        }
+
+        // ---------- Özel mesaj ----------
+
+        /// <summary>Listede bir kişiye çift tıklayınca mesajlar sadece ona gider.</summary>
+        private void LstUsers_DoubleClick(object sender, EventArgs e)
+        {
+            int i = lstUsers.SelectedIndex;
+            if (i < 0 || i >= onlineUsers.Count)
+                return;
+            string name = onlineUsers[i];
+            // Kendine çift tıklarsa herkese moduna dön
+            privateTarget = name == client.UserName ? null : name;
+            UpdateTarget();
+            txtMessage.Focus();
+        }
+
+        private void BtnEveryone_Click(object sender, EventArgs e)
+        {
+            privateTarget = null;
+            lstUsers.ClearSelected();
+            UpdateTarget();
+            txtMessage.Focus();
+        }
+
+        /// <summary>Mesajın kime gideceğini gösteren etiketi günceller.</summary>
+        private void UpdateTarget()
+        {
+            if (privateTarget == null)
+            {
+                lblTarget.Text = "Alıcı: Herkes";
+                lblTarget.ForeColor = Color.FromArgb(46, 125, 50);
+                txtMessage.PlaceholderText = "Mesajınızı yazın ve Enter'a basın...";
+            }
+            else
+            {
+                lblTarget.Text = $"Alıcı: {privateTarget} (özel mesaj — sadece o görür)";
+                lblTarget.ForeColor = Color.FromArgb(123, 31, 162);
+                txtMessage.PlaceholderText = $"{privateTarget} kişisine özel mesaj...";
+            }
+            btnEveryone.Enabled = privateTarget != null;
         }
 
         private void BtnSaveHistory_Click(object sender, EventArgs e)
@@ -105,9 +156,19 @@ namespace ChatClientApp
             if (msg.Type == MessageType.UserList)
             {
                 lstUsers.Items.Clear();
+                onlineUsers.Clear();
                 foreach (string u in msg.Users ?? new List<string>())
+                {
+                    onlineUsers.Add(u);
                     lstUsers.Items.Add(u == client.UserName ? u + " (sen)" : u);
+                }
                 lblUsers.Text = $"Çevrimiçi ({lstUsers.Items.Count})";
+                // Özel mesaj alıcısı ayrıldıysa herkese moduna dön
+                if (privateTarget != null && !onlineUsers.Contains(privateTarget))
+                {
+                    privateTarget = null;
+                    UpdateTarget();
+                }
                 return;
             }
             AddLine(msg.ToDisplayString());
@@ -117,6 +178,9 @@ namespace ChatClientApp
         {
             AddLine($"[{DateTime.Now:HH:mm:ss}] *** {reason}");
             lstUsers.Items.Clear();
+            onlineUsers.Clear();
+            privateTarget = null;
+            UpdateTarget();
             lblUsers.Text = "Çevrimiçi (0)";
             UpdateStatus();
         }

@@ -57,6 +57,14 @@ namespace ChatClientApp
             await channel.SendAsync(new ChatMessage(MessageType.Chat, UserName, text));
         }
 
+        /// <summary>Sadece belirtilen kullanıcıya özel mesaj gönderir.</summary>
+        public async Task SendPrivateAsync(string receiver, string text)
+        {
+            if (!IsConnected)
+                throw new InvalidOperationException("Sunucuya bağlı değilsiniz.");
+            await channel.SendAsync(new ChatMessage(MessageType.Private, UserName, text) { Receiver = receiver });
+        }
+
         /// <summary>Kullanıcının isteğiyle bağlantıyı kapatır.</summary>
         public async Task DisconnectAsync()
         {

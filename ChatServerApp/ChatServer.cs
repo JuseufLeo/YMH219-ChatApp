@@ -107,7 +107,14 @@ namespace ChatServerApp
                     ChatMessage msg = await client.Channel.ReceiveAsync();
                     if (msg == null || msg.Type == MessageType.Leave)
                         break;
-                    if (msg.Type != MessageType.Chat || string.IsNullOrWhiteSpace(msg.Text))
+                    if (string.IsNullOrWhiteSpace(msg.Text))
+                        continue;
+                    if (msg.Type == MessageType.Private)
+                    {
+                        await SendPrivateAsync(client, msg.Receiver, msg.Text.Trim());
+                        continue;
+                    }
+                    if (msg.Type != MessageType.Chat)
                         continue;
 
                     // Gönderen adı ve zaman sunucu tarafından belirlenir
@@ -125,6 +132,48 @@ namespace ChatServerApp
                 client.Channel.Dispose();
                 if (joined)
                     await RemoveClientAsync(client);
+            }
+        }
+
+        /// <summary>
+        /// Özel mesajı sadece alıcıya ve (görsün diye) gönderene iletir; diğer kullanıcılar görmez.
+        /// Alıcı çevrimiçi değilse gönderene bilgi mesajı döner.
+        /// </summary>
+        private async Task SendPrivateAsync(ClientConnection sender, string receiverName, string text)
+        {
+            receiverName = receiverName?.Trim() ?? "";
+            ClientConnection receiver = Clients.FirstOrDefault(c =>
+                c.UserName.Equals(receiverName, StringComparison.OrdinalIgnoreCase));
+
+            if (receiver == null)
+            {
+                await TrySendAsync(sender, new ChatMessage(MessageType.System, "Sunucu",
+                    $"'{receiverName}' çevrimiçi değil, özel mesaj iletilemedi."));
+                return;
+            }
+            if (receiver == sender)
+            {
+                await TrySendAsync(sender, new ChatMessage(MessageType.System, "Sunucu",
+                    "Kendinize özel mesaj gönderemezsiniz."));
+                return;
+            }
+
+            var pm = new ChatMessage(MessageType.Private, sender.UserName, text) { Receiver = receiver.UserName };
+            // Sunucu günlüğüne özel mesajın içeriği yazılmaz, sadece kimden kime gittiği
+            WriteLog($"{sender.UserName} → {receiver.UserName}: [özel mesaj]");
+            await TrySendAsync(receiver, pm);
+            await TrySendAsync(sender, pm);
+        }
+
+        /// <summary>Tek bir istemciye gönderir; bağlantı kopmuşsa sessizce geçer.</summary>
+        private async Task TrySendAsync(ClientConnection c, ChatMessage message)
+        {
+            try
+            {
+                await c.Channel.SendAsync(message);
+            }
+            catch (Exception ex) when (ex is IOException || ex is ObjectDisposedException || ex is SocketException)
+            {
             }
         }
 

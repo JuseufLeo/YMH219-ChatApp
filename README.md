@@ -12,6 +12,10 @@ Bu proje **Nesne Tabanlı Programlama (YMH 219)** dersi ek uygulama ödevi kapsa
 |---|---|
 | ![Sunucu penceresi](screenshots/01-sunucu.png) | ![İstemci penceresi](screenshots/02-istemci.png) |
 
+**Özel mesaj:** Mehmet'in Ali'ye gönderdiği özel mesajı yalnızca Ali (ve Mehmet) görür; aynı odadaki Ayşe'nin ekranında yalnızca herkese giden mesaj vardır. Sunucu günlüğüne özel mesajın içeriği yazılmaz, sadece `Mehmet → Ali: [özel mesaj]` kaydı düşer.
+
+![Özel mesaj](screenshots/04-ozel-mesaj.png)
+
 **Hata yönetimi:** sunucu kapalıyken bağlanmaya çalışıldığında uygulama kapanmaz, kullanıcıya açıklayıcı bir mesaj gösterilir.
 
 ![Bağlantı hatası](screenshots/03-baglanti-hatasi.png)
@@ -31,10 +35,10 @@ Bu proje **Nesne Tabanlı Programlama (YMH 219)** dersi ek uygulama ödevi kapsa
 
 | Proje | Dosya | Görevi |
 |---|---|---|
-| **ChatShared** (sınıf kütüphanesi) | `MessageType.cs` | Mesaj türleri: Join, Chat, Leave, System, UserList, Error |
-| | `ChatMessage.cs` | Tek bir mesaj (tür, gönderen, metin, zaman, kullanıcı listesi); JSON dönüşümü |
+| **ChatShared** (sınıf kütüphanesi) | `MessageType.cs` | Mesaj türleri: Join, Chat, Private, Leave, System, UserList, Error |
+| | `ChatMessage.cs` | Tek bir mesaj (tür, gönderen, alıcı, metin, zaman, kullanıcı listesi); JSON dönüşümü |
 | | `MessageChannel.cs` | Bir TCP bağlantısı üzerinden mesaj gönderme/alma (her mesaj bir satır JSON) |
-| **ChatServerApp** | `ChatServer.cs` | İstemcileri kabul eder, katılımı doğrular, mesajları herkese dağıtır |
+| **ChatServerApp** | `ChatServer.cs` | İstemcileri kabul eder, katılımı doğrular, mesajları herkese dağıtır, özel mesajları sadece alıcıya iletir |
 | | `ClientConnection.cs` | Bağlı bir istemcinin bilgileri (kullanıcı adı, adres, bağlanma zamanı) |
 | | `ServerForm.cs` | Sunucu arayüzü: başlat/durdur, bağlı istemci listesi, sunucu günlüğü |
 | **ChatClientApp** | `ChatClient.cs` | Sunucuya bağlanır, mesaj gönderir, gelen mesajları dinler |
@@ -67,12 +71,12 @@ dotnet run --project ChatClientApp
 - İstemci: kullanıcı adıyla bağlanma, **Bağlan / Mesaj Gönder / Bağlantıyı Kes**, Enter ile gönderme, durum göstergesi
 - Mesajlar gönderen adı ve saatiyle (`[14:47:01] Ayşe: Merhaba`) gösterilir
 - Birden fazla istemci aynı odada konuşabilir; katılma/ayrılma bildirimleri ve **çevrimiçi kullanıcı listesi**
+- **Özel mesaj:** çevrimiçi listesinde bir kişiye çift tıklanınca mesajlar sadece ona gider (alt satırda mor renkli "Alıcı: … (özel mesaj)" yazar); **Herkese** butonu ortak odaya döndürür. Alıcı çevrimiçi değilse gönderene bilgi verilir, alıcı ayrılırsa otomatik olarak herkese moduna dönülür
 - Aynı kullanıcı adıyla ikinci kez bağlanma sunucu tarafından reddedilir
 - **Hata yönetimi:** sunucu kapalıysa, bağlantı zaman aşımına uğrarsa veya sunucu kapanırsa uygulama çökmez, kullanıcıya bilgi verilir
 - **Sohbet geçmişini .txt dosyasına kaydetme**
 
 ## Bilinen Sınırlamalar / Geliştirme Notları
 
-- Özel (birebir) mesajlaşma yoktur; tüm mesajlar ortak odaya gider.
 - Mesajlar şifrelenmeden gönderilir; yalnızca yerel ağ ve ders amaçlı kullanım içindir.
 - Sunucu geçmişi saklamaz; sonradan bağlanan kullanıcı önceki mesajları görmez.
